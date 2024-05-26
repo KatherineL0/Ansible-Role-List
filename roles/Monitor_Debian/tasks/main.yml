@@ -1,0 +1,131 @@
+---
+#In progress
+- name: View cron status.
+
+- name: View SELinux status
+  ansible.builtin.shell: sestatus > {{ ansible_
+  changed_when: true
+
+# - name: Rkhunter database baseline.
+#   ansible.builtin.command: /usr/bin/rkhunter --propupd
+#   async: 900
+#   poll: 5
+#   changed_when: true
+
+- name: Rkhunter check
+  ansible.builtin.shell: /usr/bin/rkhunter --cronjob > {{ ansible_
+  async: 900
+  poll: 5
+  changed_when: true
+  ignore_errors: true
+
+- name: View permissions of /var/log
+  ansible.builtin.shell:
+
+# Currently disabled due to unused. Uncomment to create an environment variable for the logging folder location if desired.
+# - name: Move environment variables to /etc/profile.d/ for logging.
+#   ansible.builtin.template:
+#     src: env_vars.j2
+#     dest: /etc/profile.d/env_vars.sh
+#     mode: '0740'
+#     owner: root
+#     group: root
+
+
+- name: Review logwatch configuration.
+  ansible.builtin.shell:
+
+- name: Rkhunter cron.
+  ansible.builtin.cron:
+    name: "Rkhunter scan."
+    minute: 0
+    hour: 12
+    job: "/usr/bin/rkhunter --cronjob"
+
+- name: Rkhunter reboot cron.
+  ansible.builtin.cron:
+    name: "Rkhunter scan on reboot."
+    job: "/usr/bin/rkhunter --cronjob"
+    special_time: reboot
+
+- name: Lynis cron.
+  ansible.builtin.cron:
+    name: "Lynis Scan."
+    minute: 0
+    hour: 13
+    job: "/usr/sbin/lynis audit system"
+
+- name: Lynis reboot cron.
+  ansible.builtin.cron:
+    name: "Lynis Scan on reboot."
+    special_time: reboot
+    job: "/usr/sbin/lynis audit system"
+
+- name: Logwatch cron.
+  ansible.builtin.cron:
+    name: "Logwatch report."
+    minute: 0
+    hour: 14
+    job: "/usr/sbin/logwatch"
+
+- name: Logwatch reboot cron.
+  ansible.builtin.cron:
+    name: "Logwatch report on reboot."
+    special_time: reboot
+    job: "/usr/sbin/logwatch"
+
+- name: View /etc/password and /etc/shadow.
+  ansible.builtin.user:
+
+- name: Unattended-upgrades configuration.
+  ansible.builtin.lineinfile:
+    path: /etc/apt/apt.conf.d/50unattended-upgrades
+    insertafter: Unattended-Upgrade::Automatic-Reboot "
+    line: Unattended-Upgrade::Automated-Reboot "true";
+
+- name: AIDE init
+  ansible.builtin.command: aideinit -y -f
+  async: 1800
+  poll: 15
+  changed_when: true
+
+- name: Copy backup AIDE database to log directory.
+  ansible.builtin.copy:
+    src: /var/lib/aide/aide.db.new
+    dest: "{{ ansible_custom_log }}/auto/aide.db"
+    owner: root
+    group: root
+    mode: '0640'
+    backup: true
+    remote_src: true
+
+- name: Copy AIDE database to ansible custom log folder.
+  ansible.builtin.copy:
+    src: /var/lib/aide/aide.db.new
+    dest: /var/lib/aide/aide.db
+    owner: root
+    group: root
+    mode: '0640'
+    remote_src: true
+
+- name: Lynis audit.
+  ansible.builtin.command: /usr/sbin/lynis audit system
+  changed_when: true
+
+- name: Systemd daily aide check service start.
+  ansible.builtin.systemd_service:
+    name: dailyaidecheck.timer
+    state: started
+    enabled: true
+
+- name: Review AIDE systemd services.
+  ansible.builtin.lineinfile:
+    path: /lib/systemd/system/dailyaidecheck.service
+    insertafter: ExecStart=/usr/share/aide/bin/dailyaidecheck --systemdservice
+    line: ExecStartPost=/usr/bin/cp --backup=t /var/lib/aide/aide.db /var/log/aide/
+
+- name: Pull /var/log files.
+  ansible.builtin.cron:
+    name: "TCPDump general capture."
+    special_time: reboot
+    job: "/usr/bin/tcpdump -i any -nn >> {{ ansible_custom_log }}/auto/tcpdump_general.cap"

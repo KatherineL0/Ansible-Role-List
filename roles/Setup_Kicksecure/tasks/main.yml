@@ -1,0 +1,63 @@
+---
+# Script assumes apt usage. Remove lines 3-24 if not using Debian (Kicksecure is only available on Debian).
+
+- name: Install extrepo.
+  ansible.builtin.package:
+    name:
+      - extrepo
+    state: present
+
+- name: enable extrepo repository.
+  ansible.builtin.command: extrepo enable kicksecure
+  changed_when: false
+
+- name: Enable kicksecure stable repository.
+  ansible.builtin.command: repository-dist --enable --repository stable
+  changed_when: false
+
+- name: Update repositories cache and install Kicksecure package.
+  ansible.builtin.apt:
+    name: kicksecure-cli-host
+    update_cache: true
+
+- name: Regather facts.
+  ansible.builtin.gather_facts: full
+
+- name: Remove apparmor
+  ansible.builtin.package:
+    name:
+      - apparmor
+      - apparmor-profiles
+      - apparmor-profiles-extra
+      - apparmor-profiles-kicksecure
+    state: absent
+
+- name: Disable unused extrepo repository.
+  ansible.builtin.command: extrepo disable kicksecure
+  changed_when: false
+
+- name: Delete unused sources file.
+  ansible.builtin.file:
+    path: /etc/apt/sources.list
+    state: absent
+
+- name: Regather facts.
+  ansible.builtin.gather_facts: full
+
+- name: Create empty sources.list (Kicksecure repositories will be used).
+  ansible.builtin.file:
+    path: /etc/apt/sources.list
+    state: touch
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Remove unneeded extrepo package.
+  ansible.builtin.package:
+    name:
+      - extrepo
+    state: absent
+
+- name: Cleanup.
+  ansible.builtin.apt:
+    autoremove: true

@@ -1,0 +1,68 @@
+---
+
+- name: Temporarily disable new ssh connections while firewall change is in progress.
+  ansible.builtin.systemd_service:
+    name: ssh
+    state: stopped
+    enabled: true
+
+- name: Remove previous firewall (ufw).
+  ansible.builtin.package:
+    name:
+      - ufw
+    state: absent
+
+- name: Assure firewalld and fail2ban are installed.
+  ansible.builtin.package:
+    name:
+      - firewalld
+      - fail2ban
+    state: present
+
+- name: Assure firewalld is running.
+  ansible.builtin.systemd_service:
+    name: firewalld
+    state: started
+    enabled: true
+
+- name: (Firewalld) Restrict incoming SSH connections to Ansible management device.
+  ansible.posix.firewalld:
+    rich_rule: rule family=ipv4 port port="{{ ansible_custom_port }}" protocol="tcp" source address="{{ ansible_custom_ip }}" accept
+    immediate: true
+    permanent: true
+    state: enabled
+
+- name: Restart SSH service.
+  ansible.builtin.systemd_service:
+    name: ssh
+    state: started
+    enabled: true
+
+- name: Systemd fail2ban service start.
+  ansible.builtin.systemd_service:
+    name: fail2ban
+    state: started
+    enabled: true
+
+- name: Create management user
+  ansible.builtin.user:
+    name: "{{ ansible_custom_user }}"
+    groups: sudo
+    append: true
+    shell: /bin/bash
+    password: "{{ ansible_custom_password | string | password_hash('sha512') }}"
+
+- name: Copy local management server SSH key to target server(s).
+  ansible.posix.authorized_key:
+    user: "{{ ansible_custom_user }}"
+    state: present
+    manage_dir: true
+    key: "{{ lookup('file', '{{ ansible_custom_public_key }}') }}"
+
+- block:
+    - name: Run devsec SSH hardening role.
+      ansible.builtin.include_role:
+        name: devsec.hardening.ssh_hardening
+
+    - name: Flush handlers.
+      ansible.builtin.meta: flush_handlers

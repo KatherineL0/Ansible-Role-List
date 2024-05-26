@@ -1,0 +1,42 @@
+---
+
+- name: Install python3-pexpect for ansible module.
+  ansible.builtin.package:
+    name:
+      - python3-pexpect
+    state: present
+
+- name: Pull Nyr's Wireguard script from github.
+  ansible.builtin.get_url:
+    url: https://git.io/wireguard
+    dest: /root/wireguard-install.sh
+    mode: '0740'
+
+- name: Execute Wireguard installation script.
+  ansible.builtin.expect:
+    command: /root/wireguard-install.sh
+    responses:
+      # Select IPv4 address.
+      (.*)Which IPv4 address should be used?(.*): ""
+      (.*)This server is behind NAT. What is the public IPv4 address or hostname?(.*): "{{ ansible_host }}"
+      (.*)Public IPv4 address / hostname(.*): "{{ ansible_host }}"
+      # 1 for UDP (Recommended), 2 for TCP.
+      (.*)Which protocol should WireGuard use?(.*): "1"
+      # Port to listen to. Suggest over 1024.
+      (.*)What port should WireGuard listen to?(.*): "1194"
+      # Select DNS server to use for connected clients. (1 - Current, 2 - Google, 3 - 1.1.1.1, 4 - OpenDNS, 5 - Quad9, 6- AdGuard)
+      (.*)Select a DNS server for the client(.*): "4"
+      # Name for the first client
+      (.*)Enter a name for the first client(.*): "{{ vpn_client_name }}"
+      # "Press any key" response.
+      (.*)Press any key to continue...(.*): ""
+
+- name: Pull the configuration file (To connect to the service) to this management device's home directory.
+  ansible.builtin.fetch:
+    src: "/root/{{ vpn_client_name }}.conf"
+    dest: ~/
+
+- name: Delete the configuration file from the server.
+  ansible.builtin.file:
+    path: "/root/{{ vpn_client_name }}.conf"
+    state: absent

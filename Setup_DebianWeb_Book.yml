@@ -1,0 +1,21 @@
+---
+- name: Initial webserver setup.
+  hosts: debian_webserver
+  become: true
+  pre_tasks:
+
+    - name: Update all host/vm packages
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600
+        name: "*"
+
+  post_tasks:
+
+    - name: Reboot after all changes.
+      ansible.builtin.reboot:
+
+  roles:
+    - Setup_Debian
+    - Setup_WebserverDocker
+    - Setup_SELinux

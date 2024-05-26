@@ -1,0 +1,32 @@
+---
+
+- name: Review python3-pexpect for ansible module.
+  ansible.builtin.package:
+    name:
+      - python3-pexpect
+    state: present
+
+- name: Re-pull Nyr OpenVPN script from github.
+  ansible.builtin.get_url:
+    url: https://git.io/vpn
+    dest: /root/openvpn-install.sh
+    mode: '0740'
+
+- name: Execute OpenVPN installation script.
+  ansible.builtin.expect:
+    command: /root/openvpn-install.sh
+    responses:
+      # Select "add a new client" option.
+      (.*)Option(.*): "1"
+      # Name for the first client
+      (.*)Provide a name for the client(.*): "{{ vpn_client_name }}"
+
+- name: Pull the configuration file (To connect to the service) to this management device's home directory.
+  ansible.builtin.fetch:
+    src: "/root/{{ vpn_client_name }}.ovpn"
+    dest: ~/
+
+- name: Delete the configuration file from the server.
+  ansible.builtin.file:
+    path: "/root/{{ vpn_client_name }}.ovpn"
+    state: absent

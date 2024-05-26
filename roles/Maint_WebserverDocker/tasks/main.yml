@@ -1,0 +1,50 @@
+---
+#Webserver reverse proxy currently untested as of V1.
+- name: Review installed docker, tcpdump and firewalld packages.
+  ansible.builtin.package:
+    name:
+      - docker.io
+      - tcpdump
+      - firewalld
+    state: present
+
+- name: Verify docker image exists.
+  community.docker.docker_image:
+    name: "{{ docker_webserver_image }}"
+    source: pull
+
+# Rich_rule provided for reverse proxy configuration.
+- name: Http traffic firewall rule.
+  ansible.posix.firewalld:
+    zone: public
+#    rich_rule: rule port port="{{ webserver_http_port }}" family=ipv4 protocol="udp" source address="{{ ansible_webproxy_ip }}" accept
+    port: "{{ webserver_http_port }}/udp"
+    permanent: true
+    immediate: true
+    state: enabled
+
+- name: Verify TCPDump port 8080 cron.
+  ansible.builtin.cron:
+    name: "TCPDump port 8080."
+    special_time: reboot
+    job: "/usr/bin/tcpdump -i any -nn port {{ webserver_http_port }} >> {{ ansible_custom_log }}/auto/tcpdump_general.cap"
+
+- name: Docker systemd service started and enabled.
+  ansible.builtin.systemd_service:
+    name: docker
+    state: started
+    enabled: true
+
+- name: Move webserver-docker systemd service into place.
+  ansible.builtin.template:
+    src: docker-webserver.j2
+    dest: /lib/systemd/system/docker-webserver.service
+    mode: '0644'
+    owner: root
+    group: root
+
+- name: Docker autostart service enable.
+  ansible.builtin.systemd_service:
+    name: docker-webserver.service
+    state: started
+    enabled: true

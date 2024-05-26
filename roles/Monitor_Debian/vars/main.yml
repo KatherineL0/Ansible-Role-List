@@ -1,0 +1,8 @@
+---
+
+os_selinux_policy: default
+os_selinux_state: permissive
+ufw_manage_defaults: false
+sysctl_overwrite:
+  # Enable IPv4 traffic for many server applications, including docker. Remove if unnecessary.
+  net.ipv4.ip_forward: 1

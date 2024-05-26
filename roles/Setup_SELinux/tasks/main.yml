@@ -1,0 +1,22 @@
+---
+
+- name: Relabel filesystems and verify GRUB/PAM configured.
+  ansible.builtin.command: selinux-activate
+  changed_when: true
+
+- name: Reboot and pause 5 minutes for SELinux tasks to complete.
+  ansible.builtin.reboot:
+    post_reboot_delay: 300
+
+- name: (Audit2allow) Create SELinux module for conflicts.
+  ansible.builtin.command: audit2allow -a -M policy
+  changed_when: true
+
+- name: (Semodule -i) Implement module into SELinux.
+  ansible.builtin.command: semodule -i policy.pp
+  changed_when: true
+
+- name: Set SELinux to enforcing.
+  ansible.posix.selinux:
+    policy: default
+    state: enforcing

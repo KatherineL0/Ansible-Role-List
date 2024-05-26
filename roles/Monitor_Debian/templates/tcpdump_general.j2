@@ -1,0 +1,8 @@
+#!/bin/bash
+# Currently unused. Possible script for executing crons using environment variable.
+
+set -e
+
+. /etc/profile
+
+tcpdump -i any -nn >> $CUSTOM_AUTOLOG_DIR/tcpdumpgeneral.cap

@@ -1,0 +1,62 @@
+---
+#Currently untested as of V1.
+- name: Install docker, tcpdump and firewalld.
+  ansible.builtin.package:
+    name:
+      - docker.io
+      - tcpdump
+      - firewalld
+    state: present
+
+- name: Pull reverse proxy image.
+  community.docker.docker_image:
+    name: "{{ docker_webproxy_image }}"
+    source: pull
+
+- name: Port http traffic firewall rule.
+  ansible.posix.firewalld:
+    zone: public
+    port: "{{ webproxy_http_port }}/udp"
+    permanent: true
+    immediate: true
+    state: enabled
+
+- name: TCPDump port 8080.
+  ansible.builtin.cron:
+    name: "TCPDump port 8080."
+    special_time: reboot
+    job: "/usr/bin/tcpdump -i any -nn port {{ webproxy_http_port }} >> {{ ansible_custom_log }}/auto/tcpdump_general.cap"
+
+- name: Docker systemd service start.
+  ansible.builtin.systemd_service:
+    name: docker
+    state: started
+    enabled: true
+
+- name: Move webproxy-docker systemd service into place.
+  ansible.builtin.template:
+    src: docker-webproxy.j2
+    dest: /lib/systemd/system/docker-webproxy.service
+    mode: '0644'
+    owner: root
+    group: root
+
+# For use with webserver. Consider configuring Setup_WebproxyDocker/templates/nginx_conf.j2 and/or setting firewall rules to block IPs to assist server security/privacy.
+# - name: Create folder for webproxy configuration.
+#   ansible.builtin.file:
+#     path: "/etc/nginx/conf.d/"
+#     state: directory
+#     mode: '0740'
+#     owner: root
+#     group: root
+
+# - name: Place nginx reverse proxy configuration template in folder.
+#   ansible.builtin.template:
+#     src: nginx_config.j2
+#     dest: /etc/nginx/conf.d/nginx.default.conf
+
+- name: Docker autostart service enable.
+  ansible.builtin.systemd_service:
+    name: docker-webproxy.service
+    state: started
+    enabled: true

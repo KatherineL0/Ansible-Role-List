@@ -1,0 +1,18 @@
+[Unit]
+Description=Docker webserver management service.
+After=docker.service
+Requires=docker.service
+
+[Service]
+User=root
+TimeoutStartSec=0
+ExecStartPre=-/usr/bin/docker kill {{ webserver_container_name }}
+ExecStartPre=-/usr/bin/docker rm {{ webserver_container_name }}
+ExecStartPre=/usr/bin/docker pull {{ docker_webserver_image }}
+ExecStart=/usr/bin/docker run \
+	--name {{ webserver_container_name }} -p {{ webserver_http_port }}:{{ webserver_http_port }} {{ docker_webserver_image }}
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

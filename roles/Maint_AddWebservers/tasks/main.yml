@@ -1,0 +1,17 @@
+---
+# Task for testing future load-balanced containers.
+- name: Disable Systemd docker management service.
+  ansible.builtin.systemd_service:
+    name: docker-webserver.service
+    state: stopped
+
+- name: Run 2 load-balanced nginx docker containers.
+  community.docker.docker_container:
+    name: "{{ webserver_container_name }}"
+    output_logs: true
+    image: "{{ docker_webserver_image }}"
+    read_only: true
+    state: started
+    ports:
+      - "{{ webserver_http_port }}:{{ webserver_http_port }}"
+  with_sequence: count=2

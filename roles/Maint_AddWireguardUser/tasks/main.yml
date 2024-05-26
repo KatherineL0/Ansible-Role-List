@@ -1,0 +1,34 @@
+---
+
+- name: Review python3-pexpect packge for ansible module.
+  ansible.builtin.package:
+    name:
+      - python3-pexpect
+    state: present
+
+- name: Re-pull Nyr's Wireguard script from github.
+  ansible.builtin.get_url:
+    url: https://git.io/wireguard
+    dest: /root/wireguard-install.sh
+    mode: '0740'
+
+- name: Execute Wireguard installation script.
+  ansible.builtin.expect:
+    command: /root/wireguard-install.sh
+    responses:
+      # Select "add a new client."
+      (.*)Option(.*): "1"
+      # "Press any key" response.
+      (.*)Provide a name for the client(.*): "{{ vpn_client_name }}"
+      # Select DNS server to use for connected clients. (1 - Current, 2 - Google, 3 - 1.1.1.1, 4 - OpenDNS, 5 - Quad9, 6- AdGuard)
+      (.*)Select a DNS server for the client(.*): "4"
+
+- name: Pull the configuration file (To connect to the service) to this management device's home directory.
+  ansible.builtin.fetch:
+    src: "/root/{{ vpn_client_name }}.conf"
+    dest: ~/
+
+- name: Delete the configuration file from the server.
+  ansible.builtin.file:
+    path: "/root/{{ vpn_client_name }}.conf"
+    state: absent

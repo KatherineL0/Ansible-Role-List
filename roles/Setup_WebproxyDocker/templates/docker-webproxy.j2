@@ -1,0 +1,18 @@
+[Unit]
+Description=Docker webproxy management service.
+After=docker.service
+Requires=docker.service
+
+[Service]
+User=root
+TimeoutStartSec=0
+ExecStartPre=-/usr/bin/docker kill {{ webproxy_container_name }}
+ExecStartPre=-/usr/bin/docker rm {{ webproxy_container_name }}
+ExecStartPre=/usr/bin/docker pull {{ docker_webproxy_image }}
+ExecStart=/usr/bin/docker run \
+	--name {{ webproxy_container_name }} -p {{ webproxy_http_port }}:{{ webproxy_http_port }} {{ docker_webproxy_image }}
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,7 @@
+#!/bin/bash
+
+set -e
+
+. /etc/profile
+
+tcpdump -i any -nn port 8080 >> $CUSTOM_AUTOLOG_DIR/tcpdump_http.cap
