@@ -1,5 +1,16 @@
 ---
 #In progress
+#ps aux > file
+- name: P
+#ss -tulpna
+- name: Print
+
+#netstat
+- name:
+
+#Print current resource usage.
+- name: 
+
 - name: View cron status.
 
 - name: View SELinux status
@@ -30,7 +41,6 @@
 #     mode: '0740'
 #     owner: root
 #     group: root
-
 
 - name: Review logwatch configuration.
   ansible.builtin.shell:

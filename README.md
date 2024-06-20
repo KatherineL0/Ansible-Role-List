@@ -84,7 +84,7 @@ Debian role:
 - Lock down/remove more user commands by default.
 - Look for additional packages/compilers/interpreters to disable/remove.
 - More security applications and configurations, including many Kicksecure features (such as attack surface reduction and permission hardening) for those who would prefer not to fully distromorph.
-- ps aux + diff + filtering cron to log new processes?
+- ps aux + diff + filtering cron to log new processes and some additional monitoring in the setup role.
 - Control network interfaces/kernel traffic more granularly.
 
 Reverse proxy and/or webserver role:
@@ -97,6 +97,7 @@ Other:
 - Nginx load balancer role?
 - Logging server role? Link server(s) together automatically?
 - Allow roles to operate without interruption on 1 hosts file alone and no extra variables or repositioning of roles if possible (Or otherwise as simple as possible).
+- Create separate development branch on github.
 
 -----
 Instructions
