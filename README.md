@@ -41,6 +41,17 @@ General,
 	- More effective reporting and monitoring inside the docker container.
 - Disable unnecessary outgoing connections (securely while maintaining functionality).
 - Separate host and docker bind port variables for all related roles.
+- Created default internet interface variable to assure correct firewall zone and configuration.
+- Created new variable for openvpn and wireguard ports.
+- TCPDump scan on only specific interfaces?
+- A new task will whitelist your preferred IP for VPN connections.
+- Cups printer server removed in Setup_SSH role.
+
+
+
+Fixes,
+
+- Fixed SELinux enforcing setup.
 
 V1
 
@@ -65,6 +76,8 @@ Later/Maybe/To do,
 
 SSH role:	
 - Optionally generate unique public key(s) per server?
+- Move loopback interface to public zone (to attempt to mitigate theoretical attack although highly unrealistic attack).
+- Remove ssh service from public zone.
 - Optionally randomize ssh port within a specific range per-server?
 
 Debian role:
@@ -72,6 +85,7 @@ Debian role:
 - Look for additional packages/compilers/interpreters to disable/remove.
 - More security applications and configurations, including many Kicksecure features (such as attack surface reduction and permission hardening) for those who would prefer not to fully distromorph.
 - ps aux + diff + filtering cron to log new processes?
+- Control network interfaces/kernel traffic more granularly.
 
 Reverse proxy and/or webserver role:
 - Set up rotating ipv4 and/or ipv6 reverse proxies automatically if possible.
@@ -117,5 +131,6 @@ Notes:
 	Logs and configurations are otherwise untouched/default outside of the configurations mentioned in the ./hosts file(s).
 	SELinux is configured to targeting at the end of the OS_Hardening role, and enforce if Setup_SELinux is ran (typically at the end of all other roles, with an assumed trusted/clean system). For security and functionality purposes, please be aware of this when running these playbooks.
 - Variables which must be defined for the playbooks to function are currently located in the hosts_example file located in the "Playbooks" directory, along with an explanation of the variables.
+	- You will also want to configure the SSH role (./roles/Setup_SSH/vars/main.yml) variables if you choose to use that role.
 - Per the devsec OS hardening manual: "By default, any process that starts before the `auditd` daemon will have an AUID of `4294967295`. To improve this and provide more accurate logging, it's recommended to add the kernel boot parameter `audit=1` to you configuration. Without doing this, you will find that your `auditd` logs fail to properly audit all processes."
 	Consider adding "audit=1" to the end of the GRUB_CMDLINE_LINUX_DEFAULT variable in /etc/default/grub.d, performing update-grub, and rebooting. This may be added automatically in future versions.

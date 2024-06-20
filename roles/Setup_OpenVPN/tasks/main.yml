@@ -12,6 +12,20 @@
     dest: /root/openvpn-install.sh
     mode: '0740'
 
+- name: Replace Nyr's single port firewall rules with this our rich rules.
+  ansible.builtin.lineinfile:
+    path: /root/openvpn-install.sh
+    regexp: "--add-port"
+    state: absent
+
+- name: (Firewalld) Restrict incoming SSH connections to Ansible management device.
+  ansible.posix.firewalld:
+    rich_rule: rule family=ipv4 priority=1 port port="{{ ansible_openvpn_port }}" protocol="udp" source address="{{ vpn_ip_whitelist }}" accept
+    zone: public
+    immediate: true
+    permanent: true
+    state: enabled
+
 - name: Execute OpenVPN installation script.
   ansible.builtin.expect:
     command: /root/openvpn-install.sh
@@ -23,20 +37,27 @@
       # 1 for UDP (Recommended), 2 for TCP.
       (.*)Which protocol should OpenVPN use?(.*): "1"
       # Port to listen to. Suggest over 1024.
-      (.*)What port should OpenVPN listen to?(.*): "1194"
+      (.*)What port should OpenVPN listen to?(.*): "{{ ansible_openvpn_port }}"
       # Select DNS server to use for connected clients. (1 - Current, 2 - Google, 3 - 1.1.1.1, 4 - OpenDNS, 5 - Quad9, 6- AdGuard)
       (.*)Select a DNS server for the clients(.*): "4"
       # Name for the first client
       (.*)Enter a name for the first client(.*): "{{ vpn_client_name }}"
       # "Press any key" response.
       (.*)Press any key to continue...(.*): ""
+  async: 450
+  poll: 5
 
 - name: Pull the configuration file (To connect to the service) to this management device's home directory.
   ansible.builtin.fetch:
     src: "/root/{{ vpn_client_name }}.ovpn"
     dest: ~/
 
-- name: Delete the configuration file from the server.
+- name: (Clean-up) Delete the configuration file from the server.
   ansible.builtin.file:
     path: "/root/{{ vpn_client_name }}.ovpn"
+    state: absent
+
+- name: (Clean-up) Delete script from root folder.
+  ansible.builtin.file:
+    path: "/root/openvpn-install.sh"
     state: absent

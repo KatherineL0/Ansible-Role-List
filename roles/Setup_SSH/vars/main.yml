@@ -1,6 +1,7 @@
 ---
 
-ssh_server_ports: ['']
-ssh_allow_users: ""
-ssh_custom_options:
+sshd_server_ports:
+sshd_allow_users:
+sshd_custom_options:
+  - "Include /etc/ssh/sshd_config.d/*"
   - "PasswordAuthentication no"

@@ -1,28 +1,15 @@
 ---
-# Hosts file for the ssh setup role.
-debian_webserver:
-  hosts:
-  vars:
-    # Connection details. Consider encrypting with ansible-vault.
-    ansible_user:
-    ansible_port:
-    ansible_password:
-    ansible_ssh_private_key_file:
-    # Used in SSH role. Consider encrypting with ansible-vault.
-    ansible_custom_user:
-    ansible_custom_password:
-    ansible_custom_port:
-    # This management device's IP for firewall rules.
-    ansible_custom_ip:
-    ansible_custom_public_key:
-
+# Hosts file for the SSH role.
 debian_openvpn:
   hosts:
+    host1:
+      ansible_host:
+    host2:
+      ansible_host:
   vars:
     # Connection details. Consider encrypting with ansible-vault.
     ansible_user:
     ansible_port:
-    ansible_password:
     ansible_ssh_private_key_file:
     # Used in SSH role. Consider encrypting with ansible-vault.
     ansible_custom_user:
@@ -31,3 +18,9 @@ debian_openvpn:
     # This management device's IP for firewall rules.
     ansible_custom_ip:
     ansible_custom_public_key:
+    # Extra logging folder location.
+    ansible_custom_log: /var/log/extralogs
+    default_inet_interface: enp1s0
+    # Package configuration defaults.
+    logwatch_custom_detail: 7
+    unattendedup_reboot_time: 02:00

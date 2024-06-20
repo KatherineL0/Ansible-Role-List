@@ -6,10 +6,11 @@
     state: stopped
     enabled: true
 
-- name: Remove previous firewall (ufw).
+- name: Remove previous firewall (ufw) and CUPS printer server.
   ansible.builtin.package:
     name:
       - ufw
+      - cups
     state: absent
 
 - name: Assure firewalld and fail2ban are installed.
@@ -25,9 +26,17 @@
     state: started
     enabled: true
 
+- name: Move network interface enp1s0 to public zone.
+  ansible.posix.firewalld:
+    interface: enp1s0
+    zone: public
+    permanent: true
+    state: enabled
+
 - name: (Firewalld) Restrict incoming SSH connections to Ansible management device.
   ansible.posix.firewalld:
-    rich_rule: rule family=ipv4 port port="{{ ansible_custom_port }}" protocol="tcp" source address="{{ ansible_custom_ip }}" accept
+    rich_rule: rule family=ipv4 priority=1 port port="{{ ansible_custom_port }}" protocol="tcp" source address="{{ ansible_custom_ip }}" accept
+    zone: public
     immediate: true
     permanent: true
     state: enabled
@@ -58,6 +67,16 @@
     state: present
     manage_dir: true
     key: "{{ lookup('file', '{{ ansible_custom_public_key }}') }}"
+
+- name: Lock default user.
+  ansible.builtin.user:
+    name: linuxuser
+    password_lock: true
+
+- name: Disable default user shell.
+  ansible.builtin.user:
+    name: linuxuser
+    shell: /sbin/nologin
 
 - block:
     - name: Run devsec SSH hardening role.

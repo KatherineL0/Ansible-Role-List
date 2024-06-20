@@ -104,11 +104,11 @@
     search_string: 'Detail = Low'
     line: 'Detail = {{ logwatch_custom_detail }}'
 
-- name: TCPDump general capture cron.
-  ansible.builtin.cron:
-    name: "TCPDump general capture."
-    special_time: reboot
-    job: "/usr/bin/tcpdump -i any -nn >> {{ ansible_custom_log }}/auto/tcpdump_general.cap"
+# - name: TCPDump general capture cron.
+#   ansible.builtin.cron:
+#     name: "TCPDump general capture."
+#     special_time: reboot
+#     job: "/usr/bin/tcpdump -i any -nn >> {{ ansible_custom_log }}/auto/tcpdump_general.cap"
 
 - name: Rkhunter cron.
   ansible.builtin.cron:

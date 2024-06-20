@@ -20,3 +20,9 @@
   ansible.posix.selinux:
     policy: default
     state: enforcing
+
+- name: Edit SELinux configuration to enforcing.
+  ansible.builtin.lineinfile:
+    path: /etc/selinux/config
+    regexp: '^SELINUX='
+    line: SELINUX=enforcing

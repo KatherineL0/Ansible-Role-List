@@ -12,6 +12,20 @@
     dest: /root/wireguard-install.sh
     mode: '0740'
 
+- name: Replace Nyr's firewall rules with this our rich rules.
+  ansible.builtin.lineinfile:
+    path: /root/wireguard-install.sh
+    regexp: "--add-port"
+    state: absent
+
+- name: (Firewalld) Restrict incoming SSH connections to Ansible management device.
+  ansible.posix.firewalld:
+    rich_rule: rule family=ipv4 priority=1 port port="{{ ansible_wireguard_port }}" protocol="udp" source address="{{ vpn_ip_whitelist }}" accept
+    zone: public
+    immediate: true
+    permanent: true
+    state: enabled
+
 - name: Execute Wireguard installation script.
   ansible.builtin.expect:
     command: /root/wireguard-install.sh
@@ -22,21 +36,28 @@
       (.*)Public IPv4 address / hostname(.*): "{{ ansible_host }}"
       # 1 for UDP (Recommended), 2 for TCP.
       (.*)Which protocol should WireGuard use?(.*): "1"
-      # Port to listen to. Suggest over 1024.
-      (.*)What port should WireGuard listen to?(.*): "1194"
+      # Port to listen to. Suggest a port higher than 1024.
+      (.*)What port should WireGuard listen to?(.*): "{{ ansible_wireguard_port }}"
       # Select DNS server to use for connected clients. (1 - Current, 2 - Google, 3 - 1.1.1.1, 4 - OpenDNS, 5 - Quad9, 6- AdGuard)
       (.*)Select a DNS server for the client(.*): "4"
       # Name for the first client
       (.*)Enter a name for the first client(.*): "{{ vpn_client_name }}"
       # "Press any key" response.
       (.*)Press any key to continue...(.*): ""
+  async: 450
+  poll: 5
 
 - name: Pull the configuration file (To connect to the service) to this management device's home directory.
   ansible.builtin.fetch:
     src: "/root/{{ vpn_client_name }}.conf"
     dest: ~/
 
-- name: Delete the configuration file from the server.
+- name: (Clean-up) Delete the configuration file from the server.
   ansible.builtin.file:
     path: "/root/{{ vpn_client_name }}.conf"
+    state: absent
+
+- name: (Clean-up) Delete script from root folder.
+  ansible.builtin.file:
+    path: "/root/wireguard-install.sh"
     state: absent

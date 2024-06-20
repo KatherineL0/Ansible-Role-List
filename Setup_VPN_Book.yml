@@ -1,6 +1,6 @@
 ---
-- name: Initial webserver setup
-  hosts: debian_wireguard
+- name: VPN Playbook
+  hosts: debian_openvpn
   become: true
   pre_tasks:
 
@@ -17,5 +17,6 @@
 
   roles:
     - Setup_Debian
+    - Setup_OpenVPN
     - Setup_Wireguard
     - Setup_SELinux
