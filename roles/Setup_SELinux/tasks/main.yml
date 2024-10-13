@@ -16,6 +16,8 @@
   ansible.builtin.command: semodule -i policy.pp
   changed_when: true
 
+# Cleanup the policy files.
+
 - name: Set SELinux to enforcing.
   ansible.posix.selinux:
     policy: default

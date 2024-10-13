@@ -6,6 +6,8 @@
     state: stopped
     enabled: true
 
+#Note to self: Also test to remove exim4 and other default open ports.
+
 - name: Remove previous firewall (ufw) and CUPS printer server.
   ansible.builtin.package:
     name:
@@ -25,6 +27,8 @@
     name: firewalld
     state: started
     enabled: true
+
+# Note to self: Detect internet-facing device rather than hard-coded enp1s0.
 
 - name: Move network interface enp1s0 to public zone.
   ansible.posix.firewalld:
@@ -67,6 +71,8 @@
     state: present
     manage_dir: true
     key: "{{ lookup('file', '{{ ansible_custom_public_key }}') }}"
+
+# Note to self: Remove this (Linuxuser) and set up playbook to be provider-agnostic. This is Vultr specific.
 
 - name: Lock default user.
   ansible.builtin.user:

@@ -27,6 +27,8 @@
     state: started
     enabled: true
 
+# Review kicksecure hardening. Assure debian and kicksecure security features/settings including kernel parameters, logging, etc. are still enabled and functioning.
+
 - name: DevSec Hardening role.
   block:
     - name: OS hardening role.
@@ -140,6 +142,8 @@
   ansible.builtin.user:
     name: root
     shell: /sbin/nologin
+
+#Also lock root account.
 
 - name: Unattended-upgrades automated reboot is enabled.
   ansible.builtin.lineinfile:

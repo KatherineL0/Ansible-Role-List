@@ -3,11 +3,9 @@
 - name: Security packages.
   ansible.builtin.package:
     name:
-      - lynis
       - cron
       - firewalld
       - rkhunter
-      - tcpdump
       - aide
       - unattended-upgrades
       - apt-listchanges
@@ -20,6 +18,8 @@
       - logwatch
       - logrotate
     state: present
+
+#Pre=configured opensnitch would be useful here.
 
 - name: Enable cron.
   ansible.builtin.systemd_service:
@@ -54,7 +54,7 @@
 - name: Rkhunter initial check.
   ansible.builtin.command: /usr/bin/rkhunter --cronjob
   async: 900
-  poll: 5
+  poll: 0
   changed_when: true
   ignore_errors: true
 
@@ -123,19 +123,6 @@
     job: "/usr/bin/rkhunter --cronjob"
     special_time: reboot
 
-- name: Lynis cron.
-  ansible.builtin.cron:
-    name: "Lynis Scan."
-    minute: 0
-    hour: 13
-    job: "/usr/sbin/lynis audit system"
-
-- name: Lynis reboot cron.
-  ansible.builtin.cron:
-    name: "Lynis Scan on reboot."
-    special_time: reboot
-    job: "/usr/sbin/lynis audit system"
-
 - name: Logwatch cron.
   ansible.builtin.cron:
     name: "Logwatch report."
@@ -191,16 +178,13 @@
     mode: '0640'
     remote_src: true
 
-- name: Lynis initial run.
-  ansible.builtin.command: /usr/sbin/lynis audit system
-  changed_when: true
-
 - name: Systemd daily aide check service start.
   ansible.builtin.systemd_service:
     name: dailyaidecheck.timer
     state: started
     enabled: true
 
+# Note: Double check this is functioning correctly.
 - name: Add automated AIDE check line for additional logging.
   ansible.builtin.lineinfile:
     path: /lib/systemd/system/dailyaidecheck.service

@@ -26,6 +26,8 @@
     permanent: true
     state: enabled
 
+# Note to self: Pull solution for a script freeze from personal playbooks.
+
 - name: Execute OpenVPN installation script.
   ansible.builtin.expect:
     command: /root/openvpn-install.sh

@@ -1,21 +1,40 @@
 ---
 #In progress
+
+#install programs to monitor security status.
+
+- lynis
+
+- name: Lynis run.
+  ansible.builtin.command: /usr/sbin/lynis audit system
+  changed_when: true
+
 #ps aux > file
 - name: P
-#ss -tulpna
-- name: Print
+#ss -tulpn
+- name: Print open/listening ports.
 
 #netstat
 - name:
 
-#Print current resource usage.
-- name: 
+#last/w/lastb
+- name:
 
-- name: View cron status.
+#View last reboot time, current update status.
+- name:
+
+#Print current resource usage.
+- name:
+
+#Notes: Add some more scripts to use to test for vulnerabilities. Also test for simple passwords. Pull all/more logs from personal scripts/playbooks, including running kernel modules, all programs, etc.
+
+- name: View cron status (Including daily/weely files, etc.)
 
 - name: View SELinux status
   ansible.builtin.shell: sestatus > {{ ansible_
   changed_when: true
+
+# Auth logs.
 
 # - name: Rkhunter database baseline.
 #   ansible.builtin.command: /usr/bin/rkhunter --propupd
@@ -78,20 +97,8 @@
     hour: 14
     job: "/usr/sbin/logwatch"
 
-- name: Logwatch reboot cron.
-  ansible.builtin.cron:
-    name: "Logwatch report on reboot."
-    special_time: reboot
-    job: "/usr/sbin/logwatch"
-
 - name: View /etc/password and /etc/shadow.
   ansible.builtin.user:
-
-- name: Unattended-upgrades configuration.
-  ansible.builtin.lineinfile:
-    path: /etc/apt/apt.conf.d/50unattended-upgrades
-    insertafter: Unattended-Upgrade::Automatic-Reboot "
-    line: Unattended-Upgrade::Automated-Reboot "true";
 
 - name: AIDE init
   ansible.builtin.command: aideinit -y -f
@@ -121,12 +128,6 @@
 - name: Lynis audit.
   ansible.builtin.command: /usr/sbin/lynis audit system
   changed_when: true
-
-- name: Systemd daily aide check service start.
-  ansible.builtin.systemd_service:
-    name: dailyaidecheck.timer
-    state: started
-    enabled: true
 
 - name: Review AIDE systemd services.
   ansible.builtin.lineinfile:
